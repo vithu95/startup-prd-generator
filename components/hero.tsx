@@ -12,15 +12,10 @@ export function Hero() {
           Generate comprehensive Product Requirements Documents in seconds. Perfect for founders, developers, and AI
           coding assistants.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex justify-center">
           <Link href="/generator">
-            <Button size="lg" className="text-lg px-8">
-              Generate Your First PRD
-            </Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              View Your PRDs
+            <Button size="lg" className="text-lg px-8 font-semibold">
+              Create Your PRD Now
             </Button>
           </Link>
         </div>
