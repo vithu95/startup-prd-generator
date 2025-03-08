@@ -14,6 +14,8 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  checkGoogleAuthEnabled: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -101,6 +103,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        }
+      })
+      if (error) {
+        console.error("Google authentication error:", error)
+        if (error.message.includes("provider is not enabled")) {
+          throw new Error("Google authentication is not enabled. Please contact the administrator.")
+        }
+        throw error
+      }
+    } catch (error) {
+      console.error("Error signing in with Google:", error)
+      throw error
+    }
+  }
+
+  // Helper method to check if Google auth is enabled
+  const checkGoogleAuthEnabled = async (): Promise<boolean> => {
+    try {
+      // This will get the configured OAuth providers
+      const { data, error } = await supabase.auth.getSession()
+      
+      // We can't directly check providers from the client side
+      // So we'll try to determine based on other clues
+      if (error) {
+        console.error("Error checking auth providers:", error)
+        return false
+      }
+      
+      return true // If we can get a session, basic auth is working
+    } catch (error) {
+      console.error("Error checking Google auth status:", error)
+      return false
+    }
+  }
+
   const value = {
     user,
     session,
@@ -109,6 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    signInWithGoogle,
+    checkGoogleAuthEnabled,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -25,7 +25,7 @@ export function IdeaForm() {
   const [prd, setPrd] = useState<string | null>(null)
   const [prdJson, setPrdJson] = useState<any | null>(null)
   const { toast } = useToast()
-  const { user } = useAuth()
+  const { user, signInWithGoogle } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +36,37 @@ export function IdeaForm() {
         variant: "destructive",
       })
       return
+    }
+
+    // If user is not logged in, redirect to Google sign-in
+    if (!user) {
+      try {
+        await signInWithGoogle();
+        // The redirect will happen automatically via the signInWithGoogle method
+        return;
+      } catch (error: any) {
+        console.error("Google sign-in error:", error);
+        
+        // If Google provider isn't enabled, redirect to standard login page
+        if (error.message && (
+          error.message.includes("provider is not enabled") || 
+          error.message.includes("Google authentication is not enabled")
+        )) {
+          toast({
+            title: "Redirecting to sign in",
+            description: "Google sign-in is not available. Redirecting to standard login.",
+          });
+          router.push("/auth/sign-in");
+          return;
+        }
+        
+        toast({
+          title: "Authentication error",
+          description: error.message || "Could not redirect to login. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true)
@@ -62,6 +93,37 @@ export function IdeaForm() {
   const handleFeelingLucky = async () => {
     const randomIdea = getRandomStartupIdea()
     setIdea(randomIdea)
+
+    // If user is not logged in, redirect to Google sign-in
+    if (!user) {
+      try {
+        await signInWithGoogle();
+        // The redirect will happen automatically via the signInWithGoogle method
+        return;
+      } catch (error: any) {
+        console.error("Google sign-in error:", error);
+        
+        // If Google provider isn't enabled, redirect to standard login page
+        if (error.message && (
+          error.message.includes("provider is not enabled") || 
+          error.message.includes("Google authentication is not enabled")
+        )) {
+          toast({
+            title: "Redirecting to sign in",
+            description: "Google sign-in is not available. Redirecting to standard login.",
+          });
+          router.push("/auth/sign-in");
+          return;
+        }
+        
+        toast({
+          title: "Authentication error",
+          description: error.message || "Could not redirect to login. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     // Automatically generate PRD with the random idea
     setLoading(true)

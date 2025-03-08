@@ -37,9 +37,9 @@ export function GeneratorSidebar({
   const [loading, setLoading] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
-  const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+  const { user, signInWithGoogle } = useAuth()
 
   // Filter PRDs based on search query
   const filteredPrds = prds.filter(
@@ -70,19 +70,41 @@ export function GeneratorSidebar({
       return
     }
 
+    // If user is not logged in, redirect to Google sign-in
+    if (!user) {
+      setIsDialogOpen(false);
+      try {
+        await signInWithGoogle();
+        // The redirect will happen automatically via the signInWithGoogle method
+        return;
+      } catch (error: any) {
+        console.error("Google sign-in error:", error);
+        
+        // If Google provider isn't enabled, redirect to standard login page
+        if (error.message && (
+          error.message.includes("provider is not enabled") || 
+          error.message.includes("Google authentication is not enabled")
+        )) {
+          toast({
+            title: "Redirecting to sign in",
+            description: "Google sign-in is not available. Redirecting to standard login.",
+          });
+          router.push("/auth/sign-in");
+          return;
+        }
+        
+        toast({
+          title: "Authentication error",
+          description: error.message || "Could not redirect to login. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setLoading(true)
     try {
       const result = await generatePRD(idea)
-
-      if (!user) {
-        toast({
-          title: "Please sign in",
-          description: "You need to sign in to save PRDs",
-          variant: "destructive",
-        })
-        router.push("/auth/sign-in")
-        return
-      }
 
       // Save the PRD
       const savedPrd = await savePRD({
@@ -118,6 +140,73 @@ export function GeneratorSidebar({
   const handleFeelingLucky = async () => {
     const randomIdea = getRandomStartupIdea()
     setIdea(randomIdea)
+
+    // If user is not logged in, redirect to Google sign-in
+    if (!user) {
+      setIsDialogOpen(false);
+      try {
+        await signInWithGoogle();
+        // The redirect will happen automatically via the signInWithGoogle method
+        return;
+      } catch (error: any) {
+        console.error("Google sign-in error:", error);
+        
+        // If Google provider isn't enabled, redirect to standard login page
+        if (error.message && (
+          error.message.includes("provider is not enabled") || 
+          error.message.includes("Google authentication is not enabled")
+        )) {
+          toast({
+            title: "Redirecting to sign in",
+            description: "Google sign-in is not available. Redirecting to standard login.",
+          });
+          router.push("/auth/sign-in");
+          return;
+        }
+        
+        toast({
+          title: "Authentication error",
+          description: error.message || "Could not redirect to login. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Continue with PRD generation if user is logged in
+    setLoading(true)
+    try {
+      const result = await generatePRD(randomIdea)
+      
+      // Save the PRD
+      const savedPrd = await savePRD({
+        user_id: user.id,
+        title: result.json.startup_name || "Untitled PRD",
+        description: result.json.overview.idea_summary || randomIdea,
+        markdown: result.markdown,
+        json_data: result.json,
+      })
+
+      toast({
+        title: "Random PRD Generated Successfully",
+        description: "Your random PRD has been created",
+      })
+
+      // Add the new PRD to the list
+      onAddPrd(savedPrd)
+
+      // Close the dialog and reset the idea
+      setIsDialogOpen(false)
+      setIdea("")
+    } catch (error) {
+      toast({
+        title: "Error generating PRD",
+        description: "Please try again",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -254,7 +343,7 @@ export function GeneratorSidebar({
             <Button 
               onClick={handleNewPrd} 
               disabled={loading || !idea.trim()}
-              className="rounded-full bg-primary hover:bg-primary/90"
+              className="rounded-full bg-primary text-white"
             >
               {loading ? (
                 <>
