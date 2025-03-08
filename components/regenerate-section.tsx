@@ -74,65 +74,139 @@ export function RegenerateSection({ isOpen, onClose, prd, section, onUpdate }: R
 
     setLoading(true)
     try {
+      // IMPORTANT: Store the original values to ensure nothing unexpected changes
+      const originalDescription = prd.description;
+      const originalTitle = prd.title;
+      const originalId = prd.id;
+      const originalUserId = prd.user_id;
+      const originalCreatedAt = prd.created_at;
+      
+      // Create a deep copy of the original JSON data to modify
+      const originalJsonData = JSON.parse(JSON.stringify(prd.json_data));
+      
       // Create a prompt for regenerating just this section
       const sectionPrompt = `
-        I have a Product Requirements Document (PRD) for a startup idea: "${prd.title}".
-        
-        I need to improve the "${getSectionName()}" section based on this feedback:
+        I need to improve the "${getSectionName()}" section of a product requirements document for "${originalTitle}" based on this feedback:
         "${feedback}"
         
         Current content for this section:
         ${getSectionContent()}
         
-        Please generate an improved version of ONLY this section, keeping the same JSON structure.
+        IMPORTANT: Your response should ONLY contain valid JSON for the ${section} section with the same structure but improved content.
+        
+        For example, if I'm updating the "overview" section, respond ONLY with:
+        {
+          "idea_summary": "improved summary here",
+          "problem_statement": "improved problem statement here",
+          "solution": "improved solution here",
+          "target_audience": ["audience 1", "audience 2"]
+        }
       `
 
+      console.log(`Generating improvements for ${section} section`);
+      
       // Generate content for this section
-      const result = await generatePRD(sectionPrompt)
-
-      // Extract the section data from the result
-      const updatedJson = { ...prd.json_data }
-
+      const result = await generatePRD(sectionPrompt);
+      
+      console.log("Received response:", result);
+      
+      // New approach: Don't use the response directly for the entire document
+      // Instead, surgically extract only the part we need
+      let updatedSectionData = null;
+      
+      // Extract just the section we need from the response
+      if (section === "overview" && result.json && result.json.overview) {
+        updatedSectionData = result.json.overview;
+      } else if (section === "features" && result.json && result.json.features) {
+        updatedSectionData = result.json.features;
+      } else if (section === "tech_stack" && result.json && result.json.tech_stack) {
+        updatedSectionData = result.json.tech_stack;
+      } else if (section === "ai_integration" && result.json && result.json.ai_integration) {
+        updatedSectionData = result.json.ai_integration;
+      } else if (section === "ui_ux_design" && result.json && result.json.ui_ux_design) {
+        updatedSectionData = result.json.ui_ux_design;
+      } else if (section === "deployment" && result.json && result.json.deployment) {
+        updatedSectionData = result.json.deployment;
+      } else if (section === "roadmap" && result.json && result.json.roadmap) {
+        updatedSectionData = result.json.roadmap;
+      } else if (result.json) {
+        // Try to find the section data directly in the response JSON
+        updatedSectionData = result.json;
+      }
+      
+      if (!updatedSectionData) {
+        console.warn("Could not find the updated section data in the response");
+        toast({
+          title: "Error",
+          description: "The AI response didn't contain valid data for this section. Please try again.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Create a new copy of the JSON data with only the specific section updated
+      const updatedJsonData = {...originalJsonData};
+      
+      // Update only the specific section
       if (section === "overview") {
-        updatedJson.overview = { ...result.json.overview }
+        updatedJsonData.overview = updatedSectionData;
       } else if (section === "features") {
-        updatedJson.features = { ...result.json.features }
+        updatedJsonData.features = updatedSectionData;
       } else if (section === "tech_stack") {
-        updatedJson.tech_stack = { ...result.json.tech_stack }
+        updatedJsonData.tech_stack = updatedSectionData;
       } else if (section === "ai_integration") {
-        updatedJson.ai_integration = { ...result.json.ai_integration }
+        updatedJsonData.ai_integration = updatedSectionData;
       } else if (section === "ui_ux_design") {
-        updatedJson.ui_ux_design = { ...result.json.ui_ux_design }
+        updatedJsonData.ui_ux_design = updatedSectionData;
       } else if (section === "deployment") {
-        updatedJson.deployment = { ...result.json.deployment }
+        updatedJsonData.deployment = updatedSectionData;
       } else if (section === "roadmap") {
-        updatedJson.roadmap = { ...result.json.roadmap }
+        updatedJsonData.roadmap = updatedSectionData;
       }
-
-      // Create updated markdown from the new JSON
-      const updatedMarkdown = generateMarkdownFromJson(updatedJson)
-
-      // Create the updated PRD
+      
+      console.log(`Updated ${section} section in JSON data`);
+      
+      // Generate the markdown from the updated JSON data
+      const updatedMarkdown = generateMarkdownFromJson(updatedJsonData);
+      
+      // Create the fully updated PRD document, explicitly preserving all original metadata
       const updatedPrd: PRDDocument = {
-        ...prd,
+        id: originalId,
+        user_id: originalUserId,
+        title: originalTitle,
+        description: originalDescription,
         markdown: updatedMarkdown,
-        json_data: updatedJson,
-      }
+        json_data: updatedJsonData,
+        created_at: originalCreatedAt
+      };
+      
+      console.log("Final updated PRD:", {
+        id: updatedPrd.id,
+        title: updatedPrd.title,
+        description: updatedPrd.description,
+        section_updated: section
+      });
 
       // Call the update handler
-      onUpdate(updatedPrd)
+      onUpdate(updatedPrd);
 
       // Reset state
-      setFeedback("")
+      setFeedback("");
+      
+      toast({
+        title: "Section Updated",
+        description: `The ${getSectionName()} section has been improved based on your feedback.`,
+      });
     } catch (error) {
-      console.error("Error regenerating section:", error)
+      console.error("Error regenerating section:", error);
       toast({
         title: "Error",
-        description: "Failed to regenerate the section",
+        description: "Failed to regenerate the section. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

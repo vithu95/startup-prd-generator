@@ -12,18 +12,28 @@ import { useAuth } from "@/context/auth-context"
 import type { PRDDocument } from "@/lib/supabase"
 import { PRDVisualization } from "./prd-visualization"
 import { RegenerateSection } from "./regenerate-section"
-import { Copy, Loader2, FileJson, FileText } from "lucide-react"
+import { Copy, Loader2, FileJson, FileText, Menu } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface GeneratorWorkspaceProps {
   selectedPrdId: string | null
   onUpdatePrd: (prd: PRDDocument) => void
+  onToggleSidebar: () => void
+  sidebarOpen: boolean
 }
 
-export function GeneratorWorkspace({ selectedPrdId, onUpdatePrd }: GeneratorWorkspaceProps) {
+export function GeneratorWorkspace({ 
+  selectedPrdId, 
+  onUpdatePrd,
+  onToggleSidebar,
+  sidebarOpen
+}: GeneratorWorkspaceProps) {
   const [prd, setPrd] = useState<PRDDocument | null>(null)
   const [loading, setLoading] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("visual")
+  const [copyTooltip, setCopyTooltip] = useState("")
   const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
@@ -54,10 +64,12 @@ export function GeneratorWorkspace({ selectedPrdId, onUpdatePrd }: GeneratorWork
     fetchPRD()
   }, [selectedPrdId, toast])
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text)
+    setCopyTooltip(`Copied ${type}!`)
+    setTimeout(() => setCopyTooltip(""), 2000)
     toast({
-      title: "Copied to clipboard",
+      title: `${type} copied to clipboard`,
       description: "The content has been copied to your clipboard",
     })
   }
@@ -99,37 +111,86 @@ export function GeneratorWorkspace({ selectedPrdId, onUpdatePrd }: GeneratorWork
   // Update PRD with regenerated section
   const handleSectionUpdate = async (updatedPrd: PRDDocument) => {
     try {
+      console.log("Updating PRD with regenerated section:", updatedPrd.id);
+      
+      // Important safety check - make sure we have the current PRD loaded
+      if (!prd) {
+        console.error("Cannot update PRD - current PRD is not loaded");
+        toast({
+          title: "Error",
+          description: "Unable to update PRD. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create a new object with the original description ALWAYS preserved
+      const safeUpdatedPrd: PRDDocument = {
+        ...updatedPrd,
+        description: prd.description // Always use the current description
+      };
+      
+      // Double-check that the description is preserved
+      if (safeUpdatedPrd.description !== prd.description) {
+        console.error("Description protection failed - forcing correct description");
+        safeUpdatedPrd.description = prd.description;
+      }
+      
+      console.log("Sending update with description:", {
+        original: prd.description,
+        preserved: safeUpdatedPrd.description
+      });
+      
       // Save updated PRD
-      const savedPrd = await savePRD(updatedPrd)
+      const savedPrd = await savePRD(safeUpdatedPrd);
+
+      // Triple-check the description was preserved in the response
+      if (savedPrd.description !== prd.description) {
+        console.error("Description changed after save - this should never happen!");
+        savedPrd.description = prd.description;
+      }
 
       // Update local state
-      setPrd(savedPrd)
+      setPrd(savedPrd);
 
       // Update parent component
-      onUpdatePrd(savedPrd)
+      onUpdatePrd(savedPrd);
 
       // Close dialog
-      setIsRegenerateDialogOpen(false)
-      setActiveSection(null)
+      setIsRegenerateDialogOpen(false);
+      setActiveSection(null);
 
       toast({
         title: "Section Updated",
         description: "The PRD section has been regenerated successfully",
-      })
+      });
     } catch (error) {
-      console.error("Error updating PRD:", error)
+      console.error("Error updating PRD:", error);
+      
+      // More descriptive error message
+      let errorMessage = "Failed to update the PRD section";
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to update the PRD section",
+        description: errorMessage,
         variant: "destructive",
-      })
+      });
     }
   }
 
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </motion.div>
       </div>
     )
   }
@@ -137,64 +198,196 @@ export function GeneratorWorkspace({ selectedPrdId, onUpdatePrd }: GeneratorWork
   if (!prd) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No PRD Selected</h3>
-          <p className="text-gray-500 max-w-md">Select a PRD from the sidebar or create a new one to get started.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center max-w-md"
+        >
+          {!sidebarOpen && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onToggleSidebar}
+              className="mb-6 h-10 w-10 rounded-full border border-gray-200 mx-auto"
+            >
+              <Menu className="h-5 w-5 text-gray-500" />
+            </Button>
+          )}
+          <h3 className="text-xl font-medium text-gray-800 mb-3">No PRD Selected</h3>
+          <p className="text-gray-500">
+            Select a PRD from the sidebar or create a new one to get started.
+          </p>
+        </motion.div>
       </div>
     )
   }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="border-b p-4 flex justify-between items-center flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">{prd.title}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => copyToClipboard(prd.markdown)}>
-            <Copy className="mr-2 h-4 w-4" />
-            Copy
-          </Button>
-          <Button variant="outline" size="sm" onClick={downloadMarkdown}>
-            <FileText className="mr-2 h-4 w-4" />
-            Markdown
-          </Button>
-          <Button variant="outline" size="sm" onClick={downloadJson}>
-            <FileJson className="mr-2 h-4 w-4" />
-            JSON
-          </Button>
+      <div className="border-b p-6 flex justify-between items-center flex-wrap gap-3">
+        <div className="flex items-center gap-4">
+          {!sidebarOpen && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onToggleSidebar}
+              className="h-9 w-9 rounded-full border border-gray-200"
+            >
+              <Menu className="h-4 w-4 text-gray-500" />
+            </Button>
+          )}
+          <motion.h1 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-2xl font-bold text-gray-800"
+          >
+            {prd.title}
+          </motion.h1>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <motion.div
+            className="relative"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => copyToClipboard(prd.markdown, "Markdown")}
+              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+            >
+              <Copy className="mr-2 h-4 w-4 text-gray-500" />
+              Copy 
+            </Button>
+            {copyTooltip && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs"
+              >
+                {copyTooltip}
+              </motion.div>
+            )}
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadMarkdown}
+              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+            >
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              Markdown
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadJson}
+              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+            >
+              <FileJson className="mr-2 h-4 w-4 text-gray-500" />
+              JSON
+            </Button>
+          </motion.div>
         </div>
       </div>
 
-      <Tabs defaultValue="visual" className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b px-4">
-          <TabsList className="my-2">
-            <TabsTrigger value="visual">Visual</TabsTrigger>
-            <TabsTrigger value="markdown">Markdown</TabsTrigger>
-            <TabsTrigger value="json">JSON</TabsTrigger>
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab} 
+        className="flex-1 flex flex-col overflow-hidden"
+      >
+        <div className="border-b px-6">
+          <TabsList className="mt-0 mb-0 bg-transparent border-0">
+            <TabsTrigger 
+              value="visual" 
+              className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
+                activeTab === "visual" 
+                ? "border-primary text-primary font-medium" 
+                : "border-transparent text-gray-500"
+              }`}
+            >
+              Visual
+            </TabsTrigger>
+            <TabsTrigger 
+              value="markdown" 
+              className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
+                activeTab === "markdown" 
+                ? "border-primary text-primary font-medium" 
+                : "border-transparent text-gray-500"
+              }`}
+            >
+              Markdown
+            </TabsTrigger>
+            <TabsTrigger 
+              value="json" 
+              className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
+                activeTab === "json" 
+                ? "border-primary text-primary font-medium" 
+                : "border-transparent text-gray-500"
+              }`}
+            >
+              JSON
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="visual" className="flex-1 overflow-hidden p-4 relative" forceMount={false}>
-          <ScrollArea className="h-full pr-4">
-            <PRDVisualization prdData={prd.json_data} onSectionClick={handleSectionClick} isEditable={true} />
-          </ScrollArea>
-        </TabsContent>
+        <AnimatePresence mode="wait">
+          {activeTab === "visual" && (
+            <motion.div
+              key="visual-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 overflow-hidden p-6 relative"
+            >
+              <ScrollArea className="h-full pr-4">
+                <PRDVisualization prdData={prd.json_data} onSectionClick={handleSectionClick} isEditable={true} />
+              </ScrollArea>
+            </motion.div>
+          )}
 
-        <TabsContent value="markdown" className="flex-1 overflow-hidden p-4" forceMount={false}>
-          <Card className="h-full overflow-hidden">
-            <ScrollArea className="h-full">
-              <pre className="p-4 font-mono text-sm whitespace-pre-wrap">{prd.markdown}</pre>
-            </ScrollArea>
-          </Card>
-        </TabsContent>
+          {activeTab === "markdown" && (
+            <motion.div
+              key="markdown-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 overflow-hidden p-6"
+            >
+              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+                <ScrollArea className="h-full">
+                  <pre className="p-6 font-mono text-sm whitespace-pre-wrap text-gray-800">{prd.markdown}</pre>
+                </ScrollArea>
+              </Card>
+            </motion.div>
+          )}
 
-        <TabsContent value="json" className="flex-1 overflow-hidden p-4" forceMount={false}>
-          <Card className="h-full overflow-hidden">
-            <ScrollArea className="h-full">
-              <pre className="p-4 font-mono text-sm whitespace-pre-wrap">{JSON.stringify(prd.json_data, null, 2)}</pre>
-            </ScrollArea>
-          </Card>
-        </TabsContent>
+          {activeTab === "json" && (
+            <motion.div
+              key="json-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 overflow-hidden p-6"
+            >
+              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+                <ScrollArea className="h-full">
+                  <pre className="p-6 font-mono text-sm whitespace-pre-wrap text-gray-800">{JSON.stringify(prd.json_data, null, 2)}</pre>
+                </ScrollArea>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Tabs>
 
       {/* Section Regeneration Dialog */}

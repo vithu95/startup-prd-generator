@@ -9,8 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "PRD Generator - Structure Your Startup Ideas",
-  description: "Generate structured Product Requirements Documents for your startup ideas",
-    generator: 'v0.dev'
+  description: "Generate structured Product Requirements Documents for your startup ideas"
 }
 
 export default function RootLayout({

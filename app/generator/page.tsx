@@ -9,38 +9,51 @@ import { useAuth } from "@/context/auth-context"
 import { getUserPRDs } from "@/lib/generate-prd"
 import type { PRDDocument } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function GeneratorPage() {
   const [prds, setPrds] = useState<PRDDocument[]>([])
   const [selectedPrdId, setSelectedPrdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const { user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     // Fetch user's PRDs when the component mounts
     const fetchPRDs = async () => {
-      if (user) {
+      if (user?.id) {
         try {
-          const data = await getUserPRDs(user.id)
-          setPrds(data)
+          setLoading(true);
+          console.log("Fetching PRDs for user:", user.id);
+          const data = await getUserPRDs(user.id);
+          console.log("Fetched PRDs:", data);
+          setPrds(data || []);
 
           // If there are PRDs, select the first one by default
-          if (data.length > 0) {
-            setSelectedPrdId(data[0].id)
+          if (data && data.length > 0) {
+            setSelectedPrdId(data[0].id);
           }
         } catch (error) {
-          console.error("Error fetching PRDs:", error)
+          console.error("Error fetching PRDs:", error);
+          setPrds([]);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
       } else {
-        setLoading(false)
+        console.log("No authenticated user found");
+        setPrds([]);
+        setLoading(false);
       }
+    };
+
+    if (!user) {
+      setLoading(false);
+      return;
     }
 
-    fetchPRDs()
-  }, [user])
+    fetchPRDs();
+  }, [user]);
 
   // Function to handle selection of a PRD from the sidebar
   const handleSelectPrd = (id: string) => {
@@ -58,6 +71,11 @@ export default function GeneratorPage() {
     setPrds(prds.map((prd) => (prd.id === updatedPrd.id ? updatedPrd : prd)))
   }
 
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -70,16 +88,43 @@ export default function GeneratorPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white">
       <Header />
       <div className="flex flex-1 overflow-hidden">
-        <GeneratorSidebar
-          prds={prds}
-          selectedPrdId={selectedPrdId}
-          onSelectPrd={handleSelectPrd}
-          onAddPrd={handleAddPrd}
-        />
-        <GeneratorWorkspace selectedPrdId={selectedPrdId} onUpdatePrd={handleUpdatePrd} />
+        <AnimatePresence initial={false}>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "300px", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="border-r border-gray-100 shadow-sm"
+            >
+              <GeneratorSidebar
+                prds={prds}
+                selectedPrdId={selectedPrdId}
+                onSelectPrd={handleSelectPrd}
+                onAddPrd={handleAddPrd}
+                onToggleSidebar={toggleSidebar}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        <motion.div
+          className="flex-1"
+          animate={{ 
+            marginLeft: sidebarOpen ? "0px" : "0px" 
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <GeneratorWorkspace 
+            selectedPrdId={selectedPrdId} 
+            onUpdatePrd={handleUpdatePrd} 
+            onToggleSidebar={toggleSidebar}
+            sidebarOpen={sidebarOpen}
+          />
+        </motion.div>
       </div>
     </div>
   )
