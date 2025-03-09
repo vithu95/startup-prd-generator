@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -17,9 +17,19 @@ export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [returnUrl, setReturnUrl] = useState("/dashboard")
   const { signIn } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
+
+  // Get the return URL from the query parameters
+  useEffect(() => {
+    const urlParam = searchParams.get("returnUrl")
+    if (urlParam) {
+      setReturnUrl(urlParam)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +41,7 @@ export default function SignIn() {
         title: "Success",
         description: "You have been signed in successfully.",
       })
-      router.push("/dashboard")
+      router.push(returnUrl)
     } catch (error: any) {
       toast({
         title: "Error",

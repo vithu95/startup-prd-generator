@@ -11,10 +11,10 @@ type AuthContextType = {
   session: Session | null
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, redirectUrl?: string) => Promise<void>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: (redirectUrl?: string) => Promise<void>
   checkGoogleAuthEnabled: () => Promise<boolean>
 }
 
@@ -65,13 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, redirectUrl?: string) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/sign-in`,
+          emailRedirectTo: redirectUrl 
+            ? `${window.location.origin}/auth/sign-in?returnUrl=${encodeURIComponent(redirectUrl)}`
+            : `${window.location.origin}/auth/sign-in`,
         }
       })
       if (error) throw error
@@ -103,12 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectUrl?: string) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl || `${window.location.origin}/dashboard`,
         }
       })
       if (error) {

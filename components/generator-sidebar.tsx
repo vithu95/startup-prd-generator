@@ -73,8 +73,14 @@ export function GeneratorSidebar({
     // If user is not logged in, redirect to Google sign-in
     if (!user) {
       setIsDialogOpen(false);
+      
+      // Save the idea in localStorage so we can retrieve it after login
+      localStorage.setItem('pendingPrdIdea', idea);
+      // Create a redirect URL to return to the PRD generation
+      const redirectUrl = `${window.location.origin}/generator/continue`;
+      
       try {
-        await signInWithGoogle();
+        await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
         return;
       } catch (error: any) {
@@ -89,7 +95,8 @@ export function GeneratorSidebar({
             title: "Redirecting to sign in",
             description: "Google sign-in is not available. Redirecting to standard login.",
           });
-          router.push("/auth/sign-in");
+          // Pass the return URL as a query parameter
+          router.push(`/auth/sign-in?returnUrl=${encodeURIComponent('/generator/continue')}`);
           return;
         }
         
@@ -144,8 +151,15 @@ export function GeneratorSidebar({
     // If user is not logged in, redirect to Google sign-in
     if (!user) {
       setIsDialogOpen(false);
+      
+      // Save the random idea in localStorage so we can retrieve it after login
+      localStorage.setItem('pendingPrdIdea', randomIdea);
+      localStorage.setItem('pendingPrdFeelingLucky', 'true');
+      // Create a redirect URL to return to the PRD generation
+      const redirectUrl = `${window.location.origin}/generator/continue`;
+      
       try {
-        await signInWithGoogle();
+        await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
         return;
       } catch (error: any) {
@@ -160,7 +174,8 @@ export function GeneratorSidebar({
             title: "Redirecting to sign in",
             description: "Google sign-in is not available. Redirecting to standard login.",
           });
-          router.push("/auth/sign-in");
+          // Pass the return URL as a query parameter
+          router.push(`/auth/sign-in?returnUrl=${encodeURIComponent('/generator/continue')}`);
           return;
         }
         

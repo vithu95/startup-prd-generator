@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -22,9 +22,19 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
   const [isResendingEmail, setIsResendingEmail] = useState(false)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
+  const [returnUrl, setReturnUrl] = useState("")
   const { signUp } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
+
+  // Get the return URL from the query parameters
+  useEffect(() => {
+    const urlParam = searchParams.get("returnUrl")
+    if (urlParam) {
+      setReturnUrl(urlParam)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +51,7 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      await signUp(email, password)
+      await signUp(email, password, returnUrl)
       setShowVerificationMessage(true)
       toast({
         title: "Success",
@@ -65,7 +75,9 @@ export default function SignUp() {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/sign-in`,
+          emailRedirectTo: returnUrl 
+            ? `${window.location.origin}/auth/sign-in?returnUrl=${encodeURIComponent(returnUrl)}`
+            : `${window.location.origin}/auth/sign-in`,
         },
       })
       
