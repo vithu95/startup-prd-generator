@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Check</title>
+</head>
+<body>
+    <h1>Supabase Auth Provider Check</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Using your environment variables
+        const supabaseUrl = 'https://rmejrbqbkobynfljdgnv.supabase.co/';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZWpyYnFia29ieW5mbGpkZ252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzOTgwMzUsImV4cCI6MjA1Njk3NDAzNX0.UKqroz-Kp_zxBMazXjAP8iK_E7RKaL_9x_CcFh1kNtA';
+        
+        async function checkProviders() {
+            try {
+                const response = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run the check when the page loads
+        window.onload = checkProviders;
+    </script>
+</body>
+</html> 

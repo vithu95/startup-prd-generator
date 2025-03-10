@@ -80,15 +80,23 @@ export default function GeneratorPage() {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-1 items-center justify-center bg-gradient-to-b from-white to-gray-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="p-8 rounded-lg shadow-md bg-white"
+          >
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+            <p className="mt-4 text-center text-gray-600 font-medium">Loading your PRDs...</p>
+          </motion.div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white via-white to-gray-50">
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <AnimatePresence initial={false}>
@@ -98,7 +106,7 @@ export default function GeneratorPage() {
               animate={{ width: "300px", opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-r border-gray-100 shadow-sm"
+              className="border-r border-gray-100 shadow-sm bg-white"
             >
               <GeneratorSidebar
                 prds={prds}
@@ -112,7 +120,7 @@ export default function GeneratorPage() {
         </AnimatePresence>
         
         <motion.div
-          className="flex-1"
+          className="flex-1 bg-white rounded-tl-2xl shadow-inner"
           animate={{ 
             marginLeft: sidebarOpen ? "0px" : "0px" 
           }}

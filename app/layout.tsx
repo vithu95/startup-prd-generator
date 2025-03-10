@@ -2,8 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import "./styles/landing-page.css"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/context/auth-context"
+// We'll import AOS CSS only on the client side component
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,6 +26,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </AuthProvider>
+        {/* We'll initialize AOS in the client component instead */}
       </body>
     </html>
   )

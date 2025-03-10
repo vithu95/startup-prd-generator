@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
@@ -15,7 +15,7 @@ import { Loader2, Mail, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { supabase } from "@/lib/supabase" 
 
-export default function SignUp() {
+function SignUpForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -205,6 +205,19 @@ export default function SignUp() {
         )}
       </Card>
     </div>
+  )
+}
+
+// Export the page component that wraps the form in a Suspense boundary
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   )
 }
 
