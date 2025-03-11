@@ -76,8 +76,10 @@ export default function GeneratorPage() {
 
   // Function to add a newly generated PRD to the list
   const handleAddPrd = (prd: PRDDocument) => {
-    setPrds([prd, ...prds])
-    setSelectedPrdId(prd.id)
+    setPrds(prevPrds => [prd, ...prevPrds])
+    if (prd.id) {
+      setSelectedPrdId(prd.id)
+    }
   }
 
   // Function to update a PRD in the list
