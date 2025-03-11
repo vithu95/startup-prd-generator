@@ -41,6 +41,59 @@ export function GeneratorSidebar({
   const router = useRouter()
   const { user, signInWithGoogle, authLoading } = useAuth()
 
+  // Handle pending PRD after login
+  useEffect(() => {
+    const handlePendingPrd = async () => {
+      if (user && !authLoading) {
+        const pendingIdea = localStorage.getItem('pendingPrdIdea');
+        const isFeelingLucky = localStorage.getItem('pendingPrdFeelingLucky');
+        
+        if (pendingIdea) {
+          setIsDialogOpen(true);
+          setIdea(pendingIdea);
+          
+          // If it was a "feeling lucky" request, automatically generate
+          if (isFeelingLucky) {
+            setLoading(true);
+            try {
+              const result = await generatePRD(pendingIdea);
+              const savedPrd = await savePRD({
+                user_id: user.id,
+                title: result.json.startup_name || "Untitled PRD",
+                description: result.json.overview.idea_summary || pendingIdea,
+                markdown: result.markdown,
+                json_data: result.json,
+              });
+
+              onAddPrd(savedPrd);
+              setIsDialogOpen(false);
+              setIdea("");
+              
+              toast({
+                title: "Random PRD Generated Successfully",
+                description: "Your random PRD has been created",
+              });
+            } catch (error) {
+              toast({
+                title: "Error generating PRD",
+                description: "Please try again",
+                variant: "destructive",
+              });
+            } finally {
+              setLoading(false);
+            }
+          }
+          
+          // Clear the pending data
+          localStorage.removeItem('pendingPrdIdea');
+          localStorage.removeItem('pendingPrdFeelingLucky');
+        }
+      }
+    };
+
+    handlePendingPrd();
+  }, [user, authLoading, toast, onAddPrd]);
+
   // Filter PRDs based on search query
   const filteredPrds = prds.filter(
     (prd) =>
