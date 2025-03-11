@@ -25,7 +25,7 @@ export function IdeaForm() {
   const [prd, setPrd] = useState<string | null>(null)
   const [prdJson, setPrdJson] = useState<any | null>(null)
   const { toast } = useToast()
-  const { user, signInWithGoogle } = useAuth()
+  const { user, signInWithGoogle, authLoading } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,6 +48,7 @@ export function IdeaForm() {
       try {
         await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
+        return; // Add early return to prevent further execution
       } catch (error) {
         console.error("Google sign-in error:", error);
         toast({
@@ -55,6 +56,7 @@ export function IdeaForm() {
           description: "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         });
+        return; // Add early return on error
       }
     }
 
@@ -235,11 +237,15 @@ export function IdeaForm() {
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button type="submit" className="flex-1" disabled={loading || !idea.trim()}>
-                    {loading ? (
+                  <Button 
+                    type="submit" 
+                    className="flex-1" 
+                    disabled={loading || !idea.trim() || authLoading}
+                  >
+                    {loading || authLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating PRD...
+                        {authLoading ? "Authenticating..." : "Generating PRD..."}
                       </>
                     ) : (
                       "Generate PRD"
@@ -250,19 +256,14 @@ export function IdeaForm() {
                     variant="secondary"
                     className="flex-1"
                     onClick={handleFeelingLucky}
-                    disabled={loading}
+                    disabled={loading || authLoading}
                   >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
+                    {loading || authLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        I'm Feeling Lucky
-                      </>
+                      <Sparkles className="mr-2 h-4 w-4" />
                     )}
+                    {loading || authLoading ? (authLoading ? "Authenticating..." : "Generating...") : "I'm Feeling Lucky"}
                   </Button>
                 </div>
               </div>

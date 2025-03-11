@@ -39,7 +39,7 @@ export function GeneratorSidebar({
   const searchRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const router = useRouter()
-  const { user, signInWithGoogle } = useAuth()
+  const { user, signInWithGoogle, authLoading } = useAuth()
 
   // Filter PRDs based on search query
   const filteredPrds = prds.filter(
@@ -82,6 +82,7 @@ export function GeneratorSidebar({
       try {
         await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
+        return; // Add early return to prevent further execution
       } catch (error) {
         console.error("Google sign-in error:", error);
         toast({
@@ -89,6 +90,7 @@ export function GeneratorSidebar({
           description: "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         });
+        return; // Add early return on error
       }
     }
 
@@ -234,9 +236,14 @@ export function GeneratorSidebar({
           <Button 
             onClick={() => setIsDialogOpen(true)} 
             className="mt-4 w-full bg-primary hover:bg-primary/90 text-white rounded-full py-2"
+            disabled={authLoading}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Create New PRD
+            {authLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" />
+            )}
+            {authLoading ? "Authenticating..." : "Create New PRD"}
           </Button>
         </div>
         
