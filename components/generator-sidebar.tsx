@@ -182,6 +182,9 @@ export function GeneratorSidebar({
       // Close the dialog and reset the idea
       setIsDialogOpen(false)
       setIdea("")
+      
+      // Close the sidebar
+      onToggleSidebar()
     } catch (error) {
       toast({
         title: "Error generating PRD",
@@ -245,6 +248,9 @@ export function GeneratorSidebar({
       // Close the dialog and reset the idea
       setIsDialogOpen(false)
       setIdea("")
+      
+      // Close the sidebar
+      onToggleSidebar()
     } catch (error) {
       toast({
         title: "Error generating PRD",
