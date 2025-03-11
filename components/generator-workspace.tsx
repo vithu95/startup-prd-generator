@@ -226,8 +226,8 @@ export function GeneratorWorkspace({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="border-b p-6 flex justify-between items-center flex-wrap gap-3">
-        <div className="flex items-center gap-4">
+      <div className="border-b p-6 flex justify-between items-center">
+        <div className="flex items-center gap-2">
           {!sidebarOpen && (
             <Button 
               variant="ghost" 
@@ -238,64 +238,55 @@ export function GeneratorWorkspace({
               <Menu className="h-4 w-4 text-gray-500" />
             </Button>
           )}
-          <motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-2xl font-bold text-gray-800"
-          >
-            {prd.title}
-          </motion.h1>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <motion.div
-            className="relative"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => copyToClipboard(prd.markdown, "Markdown")}
-              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+          <div className="flex gap-2 items-center">
+            <motion.div
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
             >
-              <Copy className="mr-2 h-4 w-4 text-gray-500" />
-              Copy 
-            </Button>
-            {copyTooltip && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs"
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => copyToClipboard(prd.markdown, "Markdown")}
+                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
               >
-                {copyTooltip}
-              </motion.div>
-            )}
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={downloadMarkdown}
-              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
-            >
-              <FileText className="mr-2 h-4 w-4 text-gray-500" />
-              Markdown
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={downloadJson}
-              className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
-            >
-              <FileJson className="mr-2 h-4 w-4 text-gray-500" />
-              JSON
-            </Button>
-          </motion.div>
+                <Copy className="mr-2 h-4 w-4 text-gray-500" />
+                Copy 
+              </Button>
+              {copyTooltip && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs"
+                >
+                  {copyTooltip}
+                </motion.div>
+              )}
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={downloadMarkdown}
+                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                <FileText className="mr-2 h-4 w-4 text-gray-500" />
+                Markdown
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={downloadJson}
+                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                <FileJson className="mr-2 h-4 w-4 text-gray-500" />
+                JSON
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </div>
 
