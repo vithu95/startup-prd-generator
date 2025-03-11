@@ -29,6 +29,17 @@ const startupIdeas = [
   "An app that connects people with similar hobbies for in-person meetups and activities",
   "A platform that helps small businesses offer and manage digital gift cards",
   "A service that provides on-demand childcare for parents who work non-traditional hours",
+  "A platform that helps people find and join local book clubs and reading groups",
+  "A service that helps small businesses manage their online reputation and customer reviews",
+  "An app that connects people with similar interests for virtual book clubs and reading groups",
+  "A platform that helps people find and join local hiking and outdoor adventure groups",
+  "A service that helps small businesses manage their online presence and social media marketing", 
+  "A platform that helps people find and join local yoga and fitness classes",
+  "A service that helps small businesses manage their online ordering and delivery systems",
+  "An app that connects people with similar interests for virtual book clubs and reading groups",
+  "A platform that helps people find and join local hiking and outdoor adventure groups",
+  "A service that helps small businesses manage their online presence and social media marketing",
+  
 ]
 
 export function getRandomStartupIdea(): string {

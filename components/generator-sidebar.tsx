@@ -57,8 +57,19 @@ export function GeneratorSidebar({
       }
     }
     
+    // Add event listener for opening generator dialog
+    const handleOpenDialog = (e: CustomEvent) => {
+      setIsDialogOpen(true);
+      setIdea(e.detail.idea);
+    }
+    
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('openGeneratorDialog', handleOpenDialog as EventListener)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('openGeneratorDialog', handleOpenDialog as EventListener)
+    }
   }, [])
 
   const handleNewPrd = async () => {
@@ -77,7 +88,7 @@ export function GeneratorSidebar({
       // Save the idea in localStorage so we can retrieve it after login
       localStorage.setItem('pendingPrdIdea', idea);
       // Create a redirect URL to return to the PRD generation
-      const redirectUrl = `${window.location.origin}/generator/continue`;
+      const redirectUrl = `${window.location.origin}/generator`;
       
       try {
         await signInWithGoogle(redirectUrl);
@@ -141,7 +152,7 @@ export function GeneratorSidebar({
       localStorage.setItem('pendingPrdIdea', randomIdea);
       localStorage.setItem('pendingPrdFeelingLucky', 'true');
       // Create a redirect URL to return to the PRD generation
-      const redirectUrl = `${window.location.origin}/generator/continue`;
+      const redirectUrl = `${window.location.origin}/generator`;
       
       try {
         await signInWithGoogle(redirectUrl);

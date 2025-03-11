@@ -34,6 +34,20 @@ export default function GeneratorPage() {
           if (data && data.length > 0) {
             setSelectedPrdId(data[0].id);
           }
+
+          // Check for pending PRD idea after login
+          const pendingIdea = localStorage.getItem('pendingPrdIdea');
+          if (pendingIdea) {
+            // Clear the pending idea from localStorage
+            localStorage.removeItem('pendingPrdIdea');
+            localStorage.removeItem('pendingPrdFeelingLucky');
+            
+            // Open the dialog with the pending idea
+            if (typeof window !== 'undefined') {
+              // We need to dispatch a custom event since we can't directly access the GeneratorSidebar's state
+              window.dispatchEvent(new CustomEvent('openGeneratorDialog', { detail: { idea: pendingIdea } }));
+            }
+          }
         } catch (error) {
           console.error("Error fetching PRDs:", error);
           setPrds([]);

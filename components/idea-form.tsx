@@ -43,7 +43,7 @@ export function IdeaForm() {
       // Save the idea in localStorage so we can retrieve it after login
       localStorage.setItem('pendingPrdIdea', idea);
       // Create a redirect URL to return to the PRD generation
-      const redirectUrl = `${window.location.origin}/generator/continue`;
+      const redirectUrl = `${window.location.origin}/generator`;
       
       try {
         await signInWithGoogle(redirectUrl);
@@ -91,7 +91,7 @@ export function IdeaForm() {
       localStorage.setItem('pendingPrdIdea', randomIdea);
       localStorage.setItem('pendingPrdFeelingLucky', 'true');
       // Create a redirect URL to return to the PRD generation
-      const redirectUrl = `${window.location.origin}/generator/continue`;
+      const redirectUrl = `${window.location.origin}/generator`;
       
       try {
         await signInWithGoogle(redirectUrl);
