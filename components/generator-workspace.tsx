@@ -14,6 +14,7 @@ import { PRDVisualization } from "./prd-visualization"
 import { RegenerateSection } from "./regenerate-section"
 import { Copy, Loader2, FileJson, FileText, Menu } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { JsonViewer } from "@/components/ui/json-viewer"
 
 interface GeneratorWorkspaceProps {
   selectedPrdId: string | null
@@ -382,7 +383,9 @@ export function GeneratorWorkspace({
             >
               <Card className="h-full overflow-hidden rounded-xl border border-gray-100 shadow-sm">
                 <ScrollArea className="h-full">
-                  <pre className="p-6 font-mono text-sm whitespace-pre-wrap text-gray-800">{JSON.stringify(prd.json_data, null, 2)}</pre>
+                  <div className="p-4">
+                    <JsonViewer data={prd.json_data} />
+                  </div>
                 </ScrollArea>
               </Card>
             </motion.div>
