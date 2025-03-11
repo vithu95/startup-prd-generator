@@ -10,14 +10,38 @@ import { getUserPRDs } from "@/lib/generate-prd"
 import type { PRDDocument } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 export default function GeneratorPage() {
   const [prds, setPrds] = useState<PRDDocument[]>([])
   const [selectedPrdId, setSelectedPrdId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    // Set initial value
+    handleResize()
+
+    // Add event listener
+    window.addEventListener('resize', handleResize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Close sidebar by default on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
+  }, [isMobile])
 
   useEffect(() => {
     // Fetch user's PRDs when the component mounts
@@ -72,6 +96,9 @@ export default function GeneratorPage() {
   // Function to handle selection of a PRD from the sidebar
   const handleSelectPrd = (id: string) => {
     setSelectedPrdId(id)
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
   }
 
   // Function to add a newly generated PRD to the list
@@ -119,10 +146,16 @@ export default function GeneratorPage() {
           {sidebarOpen && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "300px", opacity: 1 }}
+              animate={{ 
+                width: typeof window !== 'undefined' && window.innerWidth < 768 ? "100%" : "300px", 
+                opacity: 1 
+              }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-r border-gray-100 shadow-sm bg-white"
+              className="border-r border-gray-100 shadow-sm bg-white fixed inset-y-0 left-0 z-50 md:relative"
+              style={{
+                top: typeof window !== 'undefined' && window.innerWidth < 768 ? "64px" : "0px" // Adjust based on your header height
+              }}
             >
               <GeneratorSidebar
                 prds={prds}
@@ -136,7 +169,10 @@ export default function GeneratorPage() {
         </AnimatePresence>
         
         <motion.div
-          className="flex-1 bg-white rounded-tl-2xl shadow-inner"
+          className={cn(
+            "flex-1 bg-white rounded-tl-2xl shadow-inner",
+            sidebarOpen && "md:ml-0 hidden md:block" // Hide on mobile when sidebar is open
+          )}
           animate={{ 
             marginLeft: sidebarOpen ? "0px" : "0px" 
           }}
