@@ -4,38 +4,68 @@ import { generateFallbackPRD } from "@/lib/fallback-prd"
 
 export async function POST(request: NextRequest) {
   try {
-    const { idea } = await request.json()
+    // First try to parse the request body
+    let idea: string
+    try {
+      const body = await request.json()
+      idea = body.idea
 
-    if (!idea || typeof idea !== "string") {
-      return NextResponse.json({ error: "Invalid request. Please provide a valid idea." }, { status: 400 })
+      if (!idea || typeof idea !== "string") {
+        return NextResponse.json(
+          { 
+            error: "Invalid request. Please provide a valid idea.",
+            requestSucceeded: false
+          }, 
+          { status: 400 }
+        )
+      }
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError)
+      return NextResponse.json(
+        { 
+          error: "Invalid request format. Please provide a valid JSON body.",
+          requestSucceeded: false
+        }, 
+        { status: 400 }
+      )
     }
 
+    // Try generating with Gemini first
     try {
       console.log("Attempting to generate PRD with Gemini for idea:", idea.substring(0, 50) + "...")
       const result = await generatePRDWithGemini(idea)
       console.log("Successfully generated PRD with Gemini")
-      return NextResponse.json(result)
+      return NextResponse.json({ ...result, requestSucceeded: true })
     } catch (geminiError: any) {
-      console.error("Error with Gemini API, details:", geminiError.message)
-      console.log("Using fallback PRD generator instead")
+      console.error("Error with Gemini API:", geminiError)
       
-      // Use fallback if Gemini API fails
+      // Check if it's a configuration error
+      if (geminiError.message?.includes("GEMINI_API_KEY")) {
+        return NextResponse.json(
+          { 
+            error: "AI service is not properly configured. Please try again later.",
+            requestSucceeded: false
+          }, 
+          { status: 503 }
+        )
+      }
+      
+      // For other Gemini errors, try the fallback
+      console.log("Using fallback PRD generator")
       const fallbackResult = generateFallbackPRD(idea)
-      return NextResponse.json(fallbackResult)
+      return NextResponse.json({ ...fallbackResult, requestSucceeded: true })
     }
   } catch (error: any) {
-    // Create a sanitized error message for the client
-    const clientErrorMessage = error.message?.includes("API") 
-      ? "Error connecting to AI service. Please try again later." 
-      : "Failed to generate PRD. Please try again with a different idea."
-    
-    console.error("Error generating PRD:", {
-      message: error.message || "Unknown error",
+    // Log the full error for debugging
+    console.error("Unexpected error generating PRD:", {
+      message: error.message,
       stack: error.stack,
+      name: error.name
     })
     
+    // Send a sanitized error message to the client
     return NextResponse.json({ 
-      error: clientErrorMessage,
+      error: "An unexpected error occurred. Please try again later.",
       requestSucceeded: false
     }, { status: 500 })
   }

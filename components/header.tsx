@@ -55,12 +55,7 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="outline" onClick={() => router.push("/auth/sign-in")} className="ml-2">
-                Sign In
-              </Button>
-              <Button onClick={() => router.push("/auth/sign-up")}>Get Started</Button>
-            </>
+            <Button onClick={() => router.push("/generator")}>Get Started</Button>
           )}
         </nav>
 
@@ -105,17 +100,8 @@ export function Header() {
             ) : (
               <div className="flex flex-col gap-2 mt-2">
                 <Button
-                  variant="outline"
                   onClick={() => {
-                    router.push("/auth/sign-in")
-                    setIsMenuOpen(false)
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  onClick={() => {
-                    router.push("/auth/sign-up")
+                    router.push("/generator")
                     setIsMenuOpen(false)
                   }}
                 >

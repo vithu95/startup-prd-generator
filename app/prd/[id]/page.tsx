@@ -98,6 +98,11 @@ export default function PRDView({ params }: { params: { id: string } }) {
     )
   }
 
+  if (!user) {
+    router.push("/generator")
+    return null
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

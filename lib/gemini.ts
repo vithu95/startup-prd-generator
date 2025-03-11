@@ -2,6 +2,10 @@
 export async function generatePRDWithGemini(idea: string) {
   try {
     const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not configured")
+    }
+
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
 
     // Create a prompt for the Gemini model
@@ -19,23 +23,23 @@ export async function generatePRDWithGemini(idea: string) {
     6. Deployment (hosting, scalability)
     7. Roadmap (mvp, ui/ux, ai integration, monetization, launch)
     
-    Return the response as a JSON object with the following structure:
+    Return ONLY a valid JSON object with no additional text, formatted exactly like this:
     {
       "startup_name": "Name of the startup",
       "overview": {
         "idea_summary": "Brief summary of the idea",
         "problem_statement": "Problem the startup solves",
         "solution": "How the startup solves the problem",
-        "target_audience": ["Audience 1", "Audience 2", ...]
+        "target_audience": ["Audience 1", "Audience 2"]
       },
       "features": {
-        "core_features": ["Feature 1", "Feature 2", ...],
+        "core_features": ["Feature 1", "Feature 2"],
         "user_roles": {
           "guest": "Description of guest role",
           "registered": "Description of registered user role",
           "premium": "Description of premium user role"
         },
-        "monetization_model": ["Model 1", "Model 2", ...]
+        "monetization_model": ["Model 1", "Model 2"]
       },
       "tech_stack": {
         "frontend": "Frontend technologies",
@@ -45,15 +49,15 @@ export async function generatePRDWithGemini(idea: string) {
       },
       "ai_integration": {
         "model": "AI model used (if applicable)",
-        "features": ["AI Feature 1", "AI Feature 2", ...]
+        "features": ["AI Feature 1", "AI Feature 2"]
       },
       "ui_ux_design": {
         "style": "Design style description",
-        "key_elements": ["Element 1", "Element 2", ...]
+        "key_elements": ["Element 1", "Element 2"]
       },
       "deployment": {
         "hosting": "Hosting platform",
-        "scalability": ["Scalability feature 1", "Scalability feature 2", ...]
+        "scalability": ["Scalability feature 1", "Scalability feature 2"]
       },
       "roadmap": {
         "mvp": "MVP description",
@@ -64,7 +68,7 @@ export async function generatePRDWithGemini(idea: string) {
       }
     }
     
-    Ensure the JSON is valid and properly formatted.
+    IMPORTANT: Return ONLY the JSON object. Do not include any other text, markdown formatting, or code blocks.
     `
 
     // Make the API request
@@ -79,80 +83,123 @@ export async function generatePRDWithGemini(idea: string) {
             parts: [{ text: prompt }],
           },
         ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        },
       }),
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`API error: ${JSON.stringify(errorData)}`)
+      const errorData = await response.text()
+      console.error("Gemini API error response:", errorData)
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
-
+    
     // Extract the text from the response
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
 
     if (!text) {
-      throw new Error("No text content in the response")
+      console.error("Empty response from Gemini:", data)
+      throw new Error("No text content in the Gemini response")
     }
 
-    // Extract the JSON from the response
-    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/)
-    let jsonData
-
-    if (jsonMatch) {
-      try {
-        // Clean and preprocess the JSON string to handle common formatting issues
-        let jsonString = jsonMatch[1] || jsonMatch[0];
-        
-        // Fix trailing commas (common issue in LLM-generated JSON)
-        jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
-        
-        // Fix missing commas between array elements or object properties
-        jsonString = jsonString.replace(/}(\s*"){/g, '},$1{');
-        jsonString = jsonString.replace(/](\s*"){/g, '],$1{');
-        jsonString = jsonString.replace(/}(\s*){/g, '},$1{');
-        jsonString = jsonString.replace(/](\s*){/g, '],$1{');
-        jsonString = jsonString.replace(/}(\s*)\[/g, '},$1[');
-        jsonString = jsonString.replace(/](\s*)\[/g, '],$1[');
-        
-        // Fix unquoted property names
-        jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
-        
-        // Now attempt to parse the cleaned JSON
-        try {
-          jsonData = JSON.parse(jsonString);
-        } catch (parseError) {
-          console.error("Error parsing cleaned JSON, attempting fallback method:", parseError);
-          
-          // If that still fails, try a more aggressive approach using a JSON5 parser or a similar technique
-          // For this implementation, we'll use a simplified approach to extract a valid subset of the JSON
-          // This is just a last resort fallback
-          
-          // Extract the main structure while ignoring problematic parts
-          // This is a simplified approach and might not work for all cases
-          const fallbackJsonString = extractValidJson(jsonString);
-          jsonData = JSON.parse(fallbackJsonString);
-        }
-      } catch (e) {
-        console.error("Error parsing JSON:", e);
-        throw new Error("Failed to parse JSON from Gemini response");
+    // Try to parse the response as JSON
+    try {
+      // First, try to parse the text directly
+      let jsonData = JSON.parse(text)
+      
+      // Validate the required fields
+      if (!validatePRDJson(jsonData)) {
+        throw new Error("Invalid PRD JSON structure")
       }
-    } else {
-      throw new Error("No JSON found in Gemini response");
+
+      // Generate markdown from the JSON
+      const markdown = generateMarkdownFromJson(jsonData)
+
+      return {
+        markdown,
+        json: jsonData,
+      }
+    } catch (parseError) {
+      console.error("Error parsing Gemini response:", parseError)
+      console.log("Raw Gemini response:", text)
+      
+      // Try to extract JSON from the text if direct parsing failed
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        try {
+          const jsonData = JSON.parse(jsonMatch[0])
+          if (validatePRDJson(jsonData)) {
+            const markdown = generateMarkdownFromJson(jsonData)
+            return { markdown, json: jsonData }
+          }
+        } catch (e) {
+          console.error("Error parsing extracted JSON:", e)
+        }
+      }
+      
+      // If all parsing attempts fail, throw an error
+      throw new Error("Failed to parse valid JSON from Gemini response")
     }
-
-    // Generate markdown from the JSON
-    const markdown = generateMarkdownFromJson(jsonData);
-
-    return {
-      markdown,
-      json: jsonData,
-    };
   } catch (error) {
     console.error("Error generating PRD with Gemini:", error)
     throw error
   }
+}
+
+// Validate that the JSON has the required structure
+function validatePRDJson(json: any): boolean {
+  const requiredFields = [
+    "startup_name",
+    "overview",
+    "features",
+    "tech_stack",
+    "ui_ux_design",
+    "deployment",
+    "roadmap"
+  ]
+
+  const requiredOverviewFields = [
+    "idea_summary",
+    "problem_statement",
+    "solution",
+    "target_audience"
+  ]
+
+  const requiredFeaturesFields = [
+    "core_features",
+    "user_roles",
+    "monetization_model"
+  ]
+
+  // Check top-level fields
+  if (!requiredFields.every(field => json.hasOwnProperty(field))) {
+    return false
+  }
+
+  // Check overview fields
+  if (!requiredOverviewFields.every(field => json.overview.hasOwnProperty(field))) {
+    return false
+  }
+
+  // Check features fields
+  if (!requiredFeaturesFields.every(field => json.features.hasOwnProperty(field))) {
+    return false
+  }
+
+  // Check arrays
+  if (!Array.isArray(json.overview.target_audience) ||
+      !Array.isArray(json.features.core_features) ||
+      !Array.isArray(json.features.monetization_model)) {
+    return false
+  }
+
+  return true
 }
 
 function generateMarkdownFromJson(json: any) {

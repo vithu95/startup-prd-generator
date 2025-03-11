@@ -82,30 +82,13 @@ export function GeneratorSidebar({
       try {
         await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
-        return;
-      } catch (error: any) {
+      } catch (error) {
         console.error("Google sign-in error:", error);
-        
-        // If Google provider isn't enabled, redirect to standard login page
-        if (error.message && (
-          error.message.includes("provider is not enabled") || 
-          error.message.includes("Google authentication is not enabled")
-        )) {
-          toast({
-            title: "Redirecting to sign in",
-            description: "Google sign-in is not available. Redirecting to standard login.",
-          });
-          // Pass the return URL as a query parameter
-          router.push(`/auth/sign-in?returnUrl=${encodeURIComponent('/generator/continue')}`);
-          return;
-        }
-        
         toast({
-          title: "Authentication error",
-          description: error.message || "Could not redirect to login. Please try again.",
+          title: "Error",
+          description: "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         });
-        return;
       }
     }
 
@@ -161,30 +144,13 @@ export function GeneratorSidebar({
       try {
         await signInWithGoogle(redirectUrl);
         // The redirect will happen automatically via the signInWithGoogle method
-        return;
-      } catch (error: any) {
+      } catch (error) {
         console.error("Google sign-in error:", error);
-        
-        // If Google provider isn't enabled, redirect to standard login page
-        if (error.message && (
-          error.message.includes("provider is not enabled") || 
-          error.message.includes("Google authentication is not enabled")
-        )) {
-          toast({
-            title: "Redirecting to sign in",
-            description: "Google sign-in is not available. Redirecting to standard login.",
-          });
-          // Pass the return URL as a query parameter
-          router.push(`/auth/sign-in?returnUrl=${encodeURIComponent('/generator/continue')}`);
-          return;
-        }
-        
         toast({
-          title: "Authentication error",
-          description: error.message || "Could not redirect to login. Please try again.",
+          title: "Error",
+          description: "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         });
-        return;
       }
     }
 
