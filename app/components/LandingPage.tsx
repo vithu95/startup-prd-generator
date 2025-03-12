@@ -152,11 +152,21 @@ export default function LandingPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          {/* Add a hero image or illustration here */}
+          {/* Hero image */}
           <div className="floating-document" style={{ 
             animation: prefersReducedMotion ? 'none' : 'simpleFloat 4s ease-in-out infinite' 
           }}>
-            <div className="document-preview"></div>
+            <img 
+              src="https://i.redd.it/m8u59kwz7r4b1.jpg"
+              alt="PRD Document Preview"
+              className="document-preview"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+            />
           </div>
         </motion.div>
       </section>
