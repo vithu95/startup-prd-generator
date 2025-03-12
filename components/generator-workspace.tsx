@@ -225,84 +225,76 @@ export function GeneratorWorkspace({
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="border-b p-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col h-screen pt-16 bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center">
           {!sidebarOpen && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={onToggleSidebar}
-              className="h-9 w-9 rounded-full border border-gray-200"
+              className="mr-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <Menu className="h-4 w-4 text-gray-500" />
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle sidebar</span>
             </Button>
           )}
-          <div className="flex gap-2 items-center">
-            <motion.div
-              className="relative"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => copyToClipboard(prd.markdown, "Markdown")}
-                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
-              >
-                <Copy className="mr-2 h-4 w-4 text-gray-500" />
-                Copy 
-              </Button>
-              {copyTooltip && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs"
-                >
-                  {copyTooltip}
-                </motion.div>
-              )}
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={downloadMarkdown}
-                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
-              >
-                <FileText className="mr-2 h-4 w-4 text-gray-500" />
-                Markdown
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={downloadJson}
-                className="rounded-full border border-gray-200 bg-white hover:bg-gray-50"
-              >
-                <FileJson className="mr-2 h-4 w-4 text-gray-500" />
-                JSON
-              </Button>
-            </motion.div>
-          </div>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {prd?.title || "No PRD Selected"}
+          </h1>
+        </div>
+        
+        {/* Export buttons with dark mode */}
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => copyToClipboard(prd.markdown, "Markdown")}
+            disabled={!prd}
+            className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <Copy className="h-4 w-4" />
+            <span>Copy</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadMarkdown}
+            disabled={!prd}
+            className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Markdown</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadJson}
+            disabled={!prd}
+            className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <FileJson className="h-4 w-4" />
+            <span>JSON</span>
+          </Button>
         </div>
       </div>
-
+      
+      {/* Tabs with dark mode */}
       <Tabs 
         value={activeTab} 
         onValueChange={setActiveTab} 
         className="flex-1 flex flex-col overflow-hidden"
       >
-        <div className="border-b px-6">
-          <TabsList className="mt-0 mb-0 bg-transparent border-0">
+        <div className="border-b px-6 dark:border-gray-800">
+          <TabsList className="mt-0 mb-0 bg-transparent dark:bg-transparent border-0">
             <TabsTrigger 
               value="visual" 
               className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
                 activeTab === "visual" 
                 ? "border-primary text-primary font-medium" 
-                : "border-transparent text-gray-500"
+                : "border-transparent text-gray-500 dark:text-gray-400"
               }`}
             >
               Visual
@@ -312,7 +304,7 @@ export function GeneratorWorkspace({
               className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
                 activeTab === "markdown" 
                 ? "border-primary text-primary font-medium" 
-                : "border-transparent text-gray-500"
+                : "border-transparent text-gray-500 dark:text-gray-400"
               }`}
             >
               Markdown
@@ -322,7 +314,7 @@ export function GeneratorWorkspace({
               className={`rounded-none border-b-2 pt-3 pb-2 px-6 data-[state=active]:border-primary ${
                 activeTab === "json" 
                 ? "border-primary text-primary font-medium" 
-                : "border-transparent text-gray-500"
+                : "border-transparent text-gray-500 dark:text-gray-400"
               }`}
             >
               JSON
@@ -341,7 +333,11 @@ export function GeneratorWorkspace({
               className="flex-1 overflow-hidden p-6 relative"
             >
               <ScrollArea className="h-full pr-4">
-                <PRDVisualization prdData={prd.json_data} onSectionClick={handleSectionClick} isEditable={true} />
+                <PRDVisualization 
+                  prdData={prd.json_data} 
+                  onSectionClick={handleSectionClick} 
+                  isEditable={true} 
+                />
               </ScrollArea>
             </motion.div>
           )}
@@ -355,9 +351,9 @@ export function GeneratorWorkspace({
               transition={{ duration: 0.3 }}
               className="flex-1 overflow-hidden p-6"
             >
-              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm dark:bg-gray-800">
                 <ScrollArea className="h-full">
-                  <pre className="p-6 font-mono text-sm whitespace-pre-wrap text-gray-800">{prd.markdown}</pre>
+                  <pre className="p-6 font-mono text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200">{prd.markdown}</pre>
                 </ScrollArea>
               </Card>
             </motion.div>
@@ -372,7 +368,7 @@ export function GeneratorWorkspace({
               transition={{ duration: 0.3 }}
               className="flex-1 overflow-hidden p-6"
             >
-              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+              <Card className="h-full overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm dark:bg-gray-800">
                 <ScrollArea className="h-full">
                   <div className="p-4">
                     <JsonViewer data={prd.json_data} />

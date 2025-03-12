@@ -121,17 +121,16 @@ export default function GeneratorPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-white dark:bg-gray-950">
         <Header />
-        <div className="flex flex-1 items-center justify-center bg-gradient-to-b from-white to-gray-50">
+        <div className="flex-1 flex items-center justify-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="p-8 rounded-lg shadow-md bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center px-4"
           >
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-            <p className="mt-4 text-center text-gray-600 font-medium">Loading your PRDs...</p>
+            <p className="mt-4 text-center text-gray-600 dark:text-gray-400 font-medium">Loading your PRDs...</p>
           </motion.div>
         </div>
       </div>
@@ -139,7 +138,7 @@ export default function GeneratorPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white via-white to-gray-50">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-gray-950">
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <AnimatePresence initial={false}>
@@ -152,9 +151,9 @@ export default function GeneratorPage() {
               }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-r border-gray-100 shadow-sm bg-white fixed inset-y-0 left-0 z-50 md:relative"
+              className="border-r border-gray-100 dark:border-gray-800 shadow-sm bg-white dark:bg-gray-900 fixed inset-y-0 left-0 z-50 md:relative"
               style={{
-                top: typeof window !== 'undefined' && window.innerWidth < 768 ? "64px" : "0px" // Adjust based on your header height
+                top: typeof window !== 'undefined' && window.innerWidth < 768 ? "64px" : "0px"
               }}
             >
               <GeneratorSidebar
@@ -170,8 +169,8 @@ export default function GeneratorPage() {
         
         <motion.div
           className={cn(
-            "flex-1 bg-white rounded-tl-2xl shadow-inner",
-            sidebarOpen && "md:ml-0 hidden md:block" // Hide on mobile when sidebar is open
+            "flex-1 bg-white dark:bg-gray-900 rounded-tl-2xl shadow-inner",
+            sidebarOpen && "md:ml-0 hidden md:block"
           )}
           animate={{ 
             marginLeft: sidebarOpen ? "0px" : "0px" 

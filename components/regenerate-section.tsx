@@ -280,23 +280,23 @@ ${json.deployment.scalability.map((item: string) => `  - ${item}  `).join("\n")}
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 border dark:border-gray-800">
         <DialogHeader>
-          <DialogTitle>Regenerate {getSectionName()}</DialogTitle>
+          <DialogTitle className="text-gray-900 dark:text-white">Regenerate {getSectionName()}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="current-content">Current Content</Label>
-            <div className="p-3 rounded-md bg-gray-50 text-sm text-gray-700 whitespace-pre-wrap min-h-20">
+            <Label htmlFor="current-content" className="text-gray-700 dark:text-gray-300">Current Content</Label>
+            <div className="p-3 rounded-md bg-gray-50 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap min-h-20 border border-gray-200 dark:border-gray-700">
               {getSectionContent()}
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="feedback">Your Feedback for Improvement</Label>
+            <Label htmlFor="feedback" className="text-gray-700 dark:text-gray-300">Your Feedback for Improvement</Label>
             <Textarea
               id="feedback"
               placeholder="Provide specific feedback on how to improve this section..."
-              className="min-h-32"
+              className="min-h-32 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               disabled={loading}
@@ -304,10 +304,19 @@ ${json.deployment.scalability.map((item: string) => `  - ${item}  `).join("\n")}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            disabled={loading}
+            className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
             Cancel
           </Button>
-          <Button onClick={handleRegenerate} disabled={loading || !feedback.trim()}>
+          <Button 
+            onClick={handleRegenerate} 
+            disabled={loading || !feedback.trim()}
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
