@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ export default function LandingPage() {
   const router = useRouter();
   const featuresRef = useRef(null);
   const pricingRef = useRef(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isFeaturesSectionInView = useInView(featuresRef, { once: false, amount: 0.2 });
   const isPricingSectionInView = useInView(pricingRef, { once: false, amount: 0.2 });
   
@@ -17,6 +18,14 @@ export default function LandingPage() {
   const prefersReducedMotion = useReducedMotion();
 
   useScrollAnimation();
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   // Simplified animations for better performance
   const featureVariants = {
@@ -59,13 +68,42 @@ export default function LandingPage() {
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#pricing">Pricing</a>
-            <a href="#examples">Examples</a>
           </div>
           <div className="auth-buttons">
-            <Link href="/generator" className="login-button">Try It</Link>
             <Link href="/generator" className="signup-button">Start Now</Link>
           </div>
+          <button 
+            className="mobile-menu-button md:hidden" 
+            onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor" 
+              className="w-6 h-6"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} 
+              />
+            </svg>
+          </button>
         </nav>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="mobile-menu">
+            <a href="#features" onClick={closeMobileMenu}>Features</a>
+            <a href="#pricing" onClick={closeMobileMenu}>Pricing</a>
+            <Link href="/generator" onClick={closeMobileMenu} className="mobile-cta">
+              Start Now
+            </Link>
+          </div>
+        )}
       </header>
       
       {/* Hero Section with Framer Motion */}
@@ -293,7 +331,6 @@ export default function LandingPage() {
               <h4>Product</h4>
               <a href="#">Features</a>
               <a href="#">Pricing</a>
-              <a href="#">Examples</a>
             </div>
             {/* More footer columns */}
           </div>
