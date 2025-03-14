@@ -8,9 +8,10 @@ import { GeneratorWorkspace } from "@/components/generator-workspace"
 import { useAuth } from "@/context/auth-context"
 import { getUserPRDs } from "@/lib/generate-prd"
 import type { PRDDocument } from "@/lib/supabase"
-import { Loader2 } from "lucide-react"
+import { Loader2, Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export default function GeneratorPage() {
   const [prds, setPrds] = useState<PRDDocument[]>([])
@@ -185,6 +186,18 @@ export default function GeneratorPage() {
           />
         </motion.div>
       </div>
+      
+      {/* Add floating mobile sidebar toggle button */}
+      {isMobile && (
+        <Button
+          onClick={toggleSidebar}
+          className="fixed bottom-6 left-6 z-50 bg-primary text-white shadow-lg rounded-full h-12 w-12 flex items-center justify-center"
+          size="icon"
+          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+        >
+          {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </Button>
+      )}
     </div>
   )
 }

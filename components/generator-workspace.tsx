@@ -12,7 +12,7 @@ import { useAuth } from "@/context/auth-context"
 import type { PRDDocument } from "@/lib/supabase"
 import { PRDVisualization } from "./prd-visualization"
 import { RegenerateSection } from "./regenerate-section"
-import { Copy, Loader2, FileJson, FileText, Menu } from "lucide-react"
+import { Copy, Loader2, FileJson, FileText, Menu, Plus, Sparkles, Wand } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { JsonViewer } from "@/components/ui/json-viewer"
 
@@ -38,6 +38,7 @@ export function GeneratorWorkspace({
   const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+  const [newPrdIdea, setNewPrdIdea] = useState("")
 
   useEffect(() => {
     // Fetch the selected PRD when the ID changes
@@ -203,7 +204,7 @@ export function GeneratorWorkspace({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center max-w-md"
+          className="text-center max-w-md w-full"
         >
           {!sidebarOpen && (
             <Button 
@@ -215,9 +216,74 @@ export function GeneratorWorkspace({
               <Menu className="h-5 w-5 text-gray-500" />
             </Button>
           )}
-          <h3 className="text-xl font-medium text-gray-800 mb-3">No PRD Selected</h3>
-          <p className="text-gray-500">
-            Select a PRD from the sidebar or create a new one to get started.
+          <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-3">Create Your First PRD</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            Enter your startup or product idea below to generate a comprehensive Product Requirements Document.
+          </p>
+          
+          {/* Direct PRD creation form */}
+          <Card className="p-6 mb-4 text-left border border-gray-200 dark:border-gray-700">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="prd-idea" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Your Startup Idea
+                </label>
+                <textarea 
+                  id="prd-idea"
+                  rows={3} 
+                  className="w-full p-3 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-2 focus:ring-primary" 
+                  placeholder="Describe your startup or product idea in a few sentences..."
+                  value={newPrdIdea}
+                  onChange={(e) => setNewPrdIdea(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    // Generate a random startup idea
+                    const randomIdeas = [
+                      "A mobile app that uses AI to identify plants and provide care instructions",
+                      "A subscription service for eco-friendly household products",
+                      "A marketplace connecting local artists with customers",
+                      "A SaaS tool for remote teams to improve collaboration",
+                      "A smart device that tracks water usage to reduce waste"
+                    ];
+                    const randomIdea = randomIdeas[Math.floor(Math.random() * randomIdeas.length)];
+                    setNewPrdIdea(randomIdea);
+                  }}
+                  className="border-gray-200 dark:border-gray-700"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  I'm Feeling Lucky
+                </Button>
+                
+                <Button 
+                  onClick={() => {
+                    // Dispatch the same event but include the idea text
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('openGeneratorDialog', { 
+                        detail: { idea: newPrdIdea, autoSubmit: true } 
+                      }));
+                    }
+                    // Also open the sidebar on mobile to show the dialog
+                    if (!sidebarOpen) {
+                      onToggleSidebar();
+                    }
+                  }}
+                  className="bg-primary text-white hover:bg-primary/90"
+                  disabled={!newPrdIdea.trim()}
+                >
+                  <Wand className="h-4 w-4 mr-2" />
+                  Generate PRD
+                </Button>
+              </div>
+            </div>
+          </Card>
+          
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Need inspiration? Try the "I'm Feeling Lucky" button for a random idea.
           </p>
         </motion.div>
       </div>
